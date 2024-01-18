@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true, "Please enter an email address"],
-        unique: [unique, "Email already exists"]
+        unique: [true, "Email already exists"]
     },
 
     password: {
@@ -46,9 +46,7 @@ const userSchema = new mongoose.Schema({
     ]
 })
 
-export const UserModel = mongoose.Model("User", userSchema)
+export const UserModel = mongoose.model("User", userSchema)
 
 
-
-const mongoose = require('mongoose'); // Erase if already required
 
