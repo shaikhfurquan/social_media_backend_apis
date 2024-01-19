@@ -12,4 +12,4 @@ export const createPosts = async (req, res, next) => {
         })
     }
 }
- 
+  
