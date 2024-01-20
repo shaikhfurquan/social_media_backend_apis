@@ -1,0 +1,19 @@
+USER:-
+POST ===> http://localhost:6600/api/v1/user/register
+{
+  "name" : "kp",
+  "email" : "kp@gmail.com",
+  "password" : "123456"
+}
+
+
+POST ===> http://localhost:6600/api/v1/user/login
+{
+  
+  "email" : "sf@gmail.com",
+  "password" : "123456"
+}
+
+
+POSTS:-
+http://localhost:6600/api/v1/post/upload
