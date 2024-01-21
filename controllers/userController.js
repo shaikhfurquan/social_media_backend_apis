@@ -40,7 +40,8 @@ export const createUser = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error creating user",
-            error: error.message
+            error: error.message,
+            error : "kfl"
         })
     }
 }
