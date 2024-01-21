@@ -90,6 +90,21 @@ export const loginUser = async (req, res) => {
 }
 
 
+export const logoutUser = (req, res) => {
+    try {
+        res.status(200).cookie("token", null, { expires: new Date(Date.now()), httpOnly: true }).json({
+            success: true,
+            message: `Logout Success`
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error Logout user",
+            error: error.message
+        })
+    }
+}
+
 
 //following users
 
@@ -124,17 +139,17 @@ export const followUser = async (req, res) => {
                 success: true,
                 message: "User Unfollowed successfully"
             })
-            
-        }else{
+
+        } else {
 
             // In our following other user added
             loggedInUser.followings.push(userToFollow._id)
             //if I follow the other user then  added his followers
             userToFollow.followers.push(userToFollow._id)
-    
+
             await loggedInUser.save()
             await userToFollow.save()
-    
+
             return res.status(200).json({
                 success: true,
                 message: "User followed successfully"
@@ -144,6 +159,79 @@ export const followUser = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error while fetching the follow user the posts",
+            error: error.message
+        })
+    }
+}
+
+export const updatePassword = async (req, res) => {
+    try {
+        // Getting the current login user
+        const user = await UserModel.findById(req.user._id).select("+password");
+        console.log(user);
+        const { oldPassword, newPassword } = req.body;
+
+        // Check if both old and new passwords are provided
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide both old and new passwords.',
+            });
+        }
+
+        // Matching the old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isMatch) {
+            return res.status(500).json({
+                success: false,
+                message: 'Incorrect Old Password',
+            });
+        }
+
+        // Hashing the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password updated successfully',
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Error while updating the user password',
+            error: error.message,
+        });
+    }
+};
+
+
+
+export const updateProfile = async (req, res) => {
+    try {
+        //getting the current login user
+        const user = await UserModel.findById(req.user._id);
+        const { name ,email } = req.body
+
+        
+        if (name && email) {
+            user.name = name
+            user.email = email
+        }
+        await user.save()
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error while updating  user profile",
             error: error.message
         })
     }
