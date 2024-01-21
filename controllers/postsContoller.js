@@ -121,5 +121,24 @@ export const likeAndUnlikePost = async (req, res) =>{
 
 
 
+export const getPostOfFollowing = async (req, res) => {
+    try {
+        
+        const user = await UserModel.findById(req.user._id).populate("followings" , "posts");
+        console.log(user);
+
+
+        res.status(200).json({
+            success : true,
+            followings : user.followings,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message : "Error while fetching the posts",
+            error : error.message 
+        })
+    }
+}
 
 
