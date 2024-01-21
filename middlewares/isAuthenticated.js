@@ -12,8 +12,9 @@ export const isAuthenticated = async (req, res, next) => {
             })
         }
 
+        // console.log(token);
         const decoded = await jwt.verify(token, process.env.JWT_SECRET)
-        // console.log("ddeocde user==>", decoded);
+       console.log(decoded);
 
         //if user is login we will store the data of user in the req.user
         req.user = await UserModel.findById(decoded._id)
@@ -23,7 +24,8 @@ export const isAuthenticated = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message,
+            eeror : "jhdsfk"
         })
     }
 }
