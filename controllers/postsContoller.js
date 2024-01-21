@@ -124,13 +124,18 @@ export const likeAndUnlikePost = async (req, res) =>{
 export const getPostOfFollowing = async (req, res) => {
     try {
         
-        const user = await UserModel.findById(req.user._id).populate("followings" , "posts");
+        const user = await UserModel.findById(req.user._id);
+        const post = await PostModel.find({
+            owner : {
+                $in : user.followings
+            }
+        })
         console.log(user);
 
 
         res.status(200).json({
             success : true,
-            followings : user.followings,
+            post : post 
         })
     } catch (error) {
         return res.status(500).json({
@@ -142,3 +147,40 @@ export const getPostOfFollowing = async (req, res) => {
 }
 
 
+export const updateCaption = async (req, res) => {
+    try {
+       
+        const post = await PostModel.findById(req.params.id)
+
+        if(!post) {
+            return res.status(404).json({
+                success : false,
+                message : "Post not found"
+            })
+        }
+
+        //only owner is allowed to update the caption
+        if(post.owner.toString() !== req.user._id.toString()) {
+            return res.status(404).json({
+                success : false,
+                message : "Unauthorized user"
+            })
+        }
+
+        post.caption = req.body.caption
+        await post.save()
+
+        return res.status(200).json({
+            success: true,
+            message: "Post caption updated successfully",
+            
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error while updating post caption",
+            error: error.message
+        })
+    }
+}
