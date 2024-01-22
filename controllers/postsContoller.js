@@ -127,7 +127,7 @@ export const getPostOfFollowing = async (req, res) => {
         const user = await UserModel.findById(req.user._id);
         const post = await PostModel.find({
             owner : {
-                $in : user.followings
+                $in : user.following
             }
         })
         console.log(user);
