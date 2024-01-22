@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import { UserModel } from "../models/userModel.js"
+import { PostModel } from "../models/postsModel.js"
 import bcrypt from "bcrypt"
 // import { matchPassword } from "../models/matchPassword.js"
 
@@ -124,12 +125,12 @@ export const followUser = async (req, res) => {
         }
 
         //if user already followed by ather then we don't allow to follow them
-        if (loggedInUser.followings.includes(userToFollow._id)) {
+        if (loggedInUser.following.includes(userToFollow._id)) {
 
             const indexFollowers = userToFollow.followers.indexOf(loggedInUser._id)
-            const indexFollowing = loggedInUser.followings.indexOf(userToFollow._id)
+            const indexFollowing = loggedInUser.following.indexOf(userToFollow._id)
 
-            loggedInUser.followings.splice(indexFollowing, 1);
+            loggedInUser.following.splice(indexFollowing, 1);
             userToFollow.followers.splice(indexFollowers, 1);
 
             await loggedInUser.save();
@@ -143,7 +144,7 @@ export const followUser = async (req, res) => {
         } else {
 
             // In our following other user added
-            loggedInUser.followings.push(userToFollow._id)
+            loggedInUser.following.push(userToFollow._id)
             //if I follow the other user then  added his followers
             userToFollow.followers.push(userToFollow._id)
 
@@ -236,3 +237,139 @@ export const updateProfile = async (req, res) => {
         })
     }
 }
+
+
+export const deleteMyProfile = async (req, res) => {
+    try {
+      const user = await UserModel.findById(req.user._id);
+      const posts = user.posts;
+      const followers = user.followers;
+      const following = user.following;
+      const userId = user._id;
+  
+  
+  
+      await user.deleteOne();
+  
+      // Logout user after deleting profile
+  
+      res.cookie("token", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+      });
+  
+      // Delete all posts of the user
+      for (let i = 0; i < posts.length; i++) {
+        const post = await PostModel.findById(posts[i]);
+        await cloudinary.v2.uploader.destroy(post.image.public_id);
+        await post.deleteOne();
+      }
+  
+      // Removing User from Followers Following
+      for (let i = 0; i < followers.length; i++) {
+        const follower = await UserModel.findById(followers[i]);
+  
+        const index = follower.following.indexOf(userId);
+        follower.following.splice(index, 1);
+        await follower.save();
+      }
+  
+      // Removing User from Following's Followers
+      for (let i = 0; i < following.length; i++) {
+        const follows = await UserModel.findById(following[i]);
+  
+        const index = follows.followers.indexOf(userId);
+        follows.followers.splice(index, 1);
+        await follows.save();
+      }
+  
+      // removing all comments of the user from all posts
+      const allPosts = await PostModel.find();
+  
+      for (let i = 0; i < allPosts.length; i++) {
+        const post = await PostModel.findById(allPosts[i]._id);
+  
+        for (let j = 0; j < post.comments.length; j++) {
+          if (post.comments[j].user === userId) {
+            post.comments.splice(j, 1);
+          }
+        }
+        await post.save();
+      }
+     
+         res.status(200).json({
+            success: true,
+            message: "User profile deleted successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error while deleting user profile",
+            error: error.message
+        })
+    }
+}
+
+
+export const myProfile = async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.user._id).populate("posts")
+
+        res.status(200).json({
+            success: true,
+            user : user
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error showing login user profile",
+            error: error.message
+        })
+    }
+}
+
+
+export const getUserProfileById = async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.id).populate("posts")
+
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+        res.status(200).json({
+            success: true,
+            user : user
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error showing user profile",
+            error: error.message
+        })
+    }
+}
+
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const allUsers = await UserModel.find()
+        res.status(200).json({
+            success: true,
+            allUsers
+        })
+
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error while showing All users profile",
+            error: error.message
+        })
+    }
+}
+
