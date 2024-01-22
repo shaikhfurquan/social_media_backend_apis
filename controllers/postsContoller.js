@@ -3,14 +3,14 @@ import { UserModel } from "../models/userModel.js"
 
 export const createPosts = async (req, res) => {
     try {
-      
+
         const newPostData = {
-            caption : req.body.caption,
-            image : {
-                public_id : "req.body.public_id",
-                url : "req.body.url"
+            caption: req.body.caption,
+            image: {
+                public_id: "req.body.public_id",
+                url: "req.body.url"
             },
-            owner : req.user._id
+            owner: req.user._id
         }
 
         const post = await PostModel.create(newPostData)
@@ -27,25 +27,25 @@ export const createPosts = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message : "Error while creating posts",
-            error : error.message 
+            message: "Error while creating posts",
+            error: error.message
         })
     }
 }
 
 
-export const deletePost =async  (req, res) => {
+export const deletePost = async (req, res) => {
     try {
         const post = await PostModel.findById(req.params.id)
 
-        if(!post){
+        if (!post) {
             return res.status(404).json({
                 success: false,
                 message: "Post not found",
             })
         }
-        
-        if(post.owner.toString() !== post.owner.toString()){
+
+        if (post.owner.toString() !== post.owner.toString()) {
             return res.status(404).json({
                 success: false,
                 message: "Unauthenticated user",
@@ -68,21 +68,21 @@ export const deletePost =async  (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message : "Error while deleting the posts",
-            error : error.message 
+            message: "Error while deleting the posts",
+            error: error.message
         })
     }
 
 }
 
 
-export const likeAndUnlikePost = async (req, res) =>{
+export const likeAndUnlikePost = async (req, res) => {
     try {
 
         const post = await PostModel.findById(req.params.id)
 
         //if someone giving not a valid id the
-        if(!post){
+        if (!post) {
             return res.status(404).json({
                 success: false,
                 message: "Invalid Post"
@@ -90,7 +90,7 @@ export const likeAndUnlikePost = async (req, res) =>{
         }
 
         //if post already like then 
-        if(post.likes.includes(req.user._id)){
+        if (post.likes.includes(req.user._id)) {
             const index = post.likes.indexOf(req.user._id)
             post.likes.splice(index, 1)
 
@@ -99,7 +99,7 @@ export const likeAndUnlikePost = async (req, res) =>{
                 success: true,
                 message: "Post Unliked"
             })
-        }else{
+        } else {
             // pushing the login userId in like array
             post.likes.push(req.user.id)
             await post.save()
@@ -109,12 +109,12 @@ export const likeAndUnlikePost = async (req, res) =>{
             })
 
         }
-        
+
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message : "Error like and unlike the posts",
-            error : error.message 
+            message: "Error like and unlike the posts",
+            error: error.message
         })
     }
 }
@@ -123,25 +123,25 @@ export const likeAndUnlikePost = async (req, res) =>{
 
 export const getPostOfFollowing = async (req, res) => {
     try {
-        
+
         const user = await UserModel.findById(req.user._id);
         const post = await PostModel.find({
-            owner : {
-                $in : user.following
+            owner: {
+                $in: user.following
             }
         })
         console.log(user);
 
 
         res.status(200).json({
-            success : true,
-            post : post 
+            success: true,
+            post: post
         })
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message : "Error while fetching the posts",
-            error : error.message 
+            message: "Error while fetching the posts",
+            error: error.message
         })
     }
 }
@@ -149,21 +149,21 @@ export const getPostOfFollowing = async (req, res) => {
 
 export const updateCaption = async (req, res) => {
     try {
-       
+
         const post = await PostModel.findById(req.params.id)
 
-        if(!post) {
+        if (!post) {
             return res.status(404).json({
-                success : false,
-                message : "Post not found"
+                success: false,
+                message: "Post not found"
             })
         }
 
         //only owner is allowed to update the caption
-        if(post.owner.toString() !== req.user._id.toString()) {
+        if (post.owner.toString() !== req.user._id.toString()) {
             return res.status(404).json({
-                success : false,
-                message : "Unauthorized user"
+                success: false,
+                message: "Unauthorized user"
             })
         }
 
@@ -173,7 +173,7 @@ export const updateCaption = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Post caption updated successfully",
-            
+
         })
 
     } catch (error) {
@@ -184,3 +184,56 @@ export const updateCaption = async (req, res) => {
         })
     }
 }
+
+
+export const commentOnPost = async (req, res) => {
+    try {
+        const post = await PostModel.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        let commentIndex = -1;
+
+        // Checking if comment already exists
+
+        post.comments.forEach((item, index) => {
+            if (item.user.toString() === req.user._id.toString()) {
+                commentIndex = index;
+            }
+        });
+
+        if (commentIndex !== -1) {
+            post.comments[commentIndex].comment = req.body.comment;
+
+            await post.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Comment Updated",
+            });
+        } else {
+            post.comments.push({
+                user: req.user._id,
+                comment: req.body.comment,
+            });
+
+            await post.save();
+            return res.status(200).json({
+                success: true,
+                message: "Comment added",
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+
