@@ -15,5 +15,51 @@ POST ===> http://localhost:6600/api/v1/user/login
 }
 
 
+GET ==> get user profile
+http://localhost:6600/api/v1/user/me
+
+
+GET ==> get user by id
+http://localhost:6600/api/v1/user/65ae2257aeef96266b742258
+
+
+GET ==> Follow and Unfollow user(other user id ==> 65aa306f7695060a0e443854)
+http://localhost:6600/api/v1/user/follow/65aa306f7695060a0e443854
+
+
+
+PUT ==> update user password 
+http://localhost:6600/api/v1/user/update/password
+{
+  "oldPassword" : "123456",
+  "newPassword" : "654321"
+}
+
+
+PUT ==> update user profile 
+http://localhost:6600/api/v1/user/update/profile
+{
+  "name" : "ok",
+  "email" : "ok@gmail.com"
+}
+
+DELETE ==> delete user profile
+http://localhost:6600/api/v1/user/delete/me
+
 POSTS:-
 http://localhost:6600/api/v1/post/upload
+
+DELETE
+http://localhost:6600/api/v1/post/delete/65acbfad18184a32d2a18f00
+
+
+GET ==> get user post
+http://localhost:6600/api/v1/post/
+
+
+PUT ==> update caption
+http://localhost:6600/api/v1/post/update/caption/65acc22a18184a32d2a18f35
+
+
+PUT ==> comment on post
+http://localhost:6600/api/v1/post/comment/65ae9e45bd2b485573986290
